@@ -1,1 +1,9 @@
-pip freeze > requirements.txt
+streamlit
+ultralytics
+opencv-python-headless
+Pillow
+google-generativeai
+python-dotenv
+requests
+transformers
+torch
