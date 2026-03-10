@@ -1,9 +1,7 @@
 import streamlit as st
 import tempfile
 import os
-import cv2
-import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from yolo_detector import detect_objects, model as yolo_model
 from vlm_module import analyze_scene
 from llm_module import generate_response
@@ -258,8 +256,9 @@ with right_col:
         with st.spinner("Running YOLO detection..."):
             detections = detect_objects(tmp_path)
 
-            # Draw bounding boxes
-            img_cv = cv2.imread(tmp_path)
+            # Draw bounding boxes using Pillow
+            img_pil = Image.open(tmp_path).convert("RGB")
+            draw = ImageDraw.Draw(img_pil)
             results = yolo_model(tmp_path)
             for r in results:
                 for box in r.boxes:
@@ -267,13 +266,13 @@ with right_col:
                     conf = float(box.conf)
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
                     label = "Accident" if cls == 0 else "Car Fire"
-                    color = (0, 200, 255) if cls == 0 else (0, 60, 255)
-                    cv2.rectangle(img_cv, (x1, y1), (x2, y2), color, 2)
-                    cv2.putText(img_cv, f"{label} {conf:.0%}", (x1, y1 - 8),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.55, color, 2)
+                    color = (0, 200, 255) if cls == 0 else (255, 60, 0)
+                    draw.rectangle([x1, y1, x2, y2], outline=color, width=3)
+                    draw.rectangle([x1, y1 - 20, x1 + len(label) * 8 + 60, y1], fill=color)
+                    draw.text((x1 + 4, y1 - 18), f"{label} {conf:.0%}", fill=(0, 0, 0))
 
             annotated_path = tmp_path.replace(".png", "_annotated.png")
-            cv2.imwrite(annotated_path, img_cv)
+            img_pil.save(annotated_path)
 
         # Show annotated image
         st.markdown('<div class="section-label">🖼 Annotated Image</div>', unsafe_allow_html=True)
