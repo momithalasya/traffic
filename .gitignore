@@ -1,0 +1,5 @@
+.env
+best.pt
+__pycache__/
+*.pyc
+.ultralytics/
